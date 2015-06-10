@@ -1,0 +1,15 @@
+/*
+    Document   : towerDefense/towerDefense.css
+    Created on : 2015-06-09 04:40 PM
+    Author     : mvann
+    Description:
+    Purpose of the stylesheet follows.
+    To change this template use Tools | Templates.
+*/
+
+canvas{
+  border-width: 10px;
+  border-style: inset;
+  border-color: green;
+  float: right;
+}

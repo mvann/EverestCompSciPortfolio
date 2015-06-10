@@ -1,0 +1,113 @@
+/*
+    Document   : final.css
+    Created on : 2015-06-05 09:24 PM
+    Author     : mvann
+    Description:
+    Purpose of the stylesheet follows.
+    To change this template use Tools | Templates.
+*/
+
+*{
+    font-family: 'Droid Sans', sans-serif;
+    text-decoration: none;
+}
+
+root {
+    display: block;
+}
+
+body{
+    margin: 0px;
+    background-color: black;
+    position: static;
+}
+
+#header{
+    position: fixed;
+    display: block;
+    margin-top: 20px;
+    height: 80px;
+    width: 100%;
+    background-color: #bbbbbb;
+    opacity: .7;
+    z-index: 5;
+}
+
+#bodyDiv{
+    position: absolute;
+    display: block;
+    width: 100%;
+    height: 1920px;
+    background-image: url("transamerica.jpg");
+    z-index: 0;
+}
+
+#navBar{
+    width: 160px;
+    height: 1920px;
+    display: block;
+    position: absolute;
+    margin-left: 20px;
+    background-color: #bbbbbb;
+    opacity: .7;
+    z-index: 3;
+}
+
+#bodySection{
+    width: 1040px;
+    height: 1760px;
+    position: absolute;
+    margin-top: 40px;
+    margin-left: 220px;
+    background-color: white;
+    z-index: 3;
+    opacity: .7;
+}
+
+#bodyParagraph{
+    width: 920px;
+    height: 1640px;
+    margin-top: 100px;
+    margin-left: 300px;
+    z-index:10;
+    position: absolute;
+}
+
+#bufferBox{
+    width: 100%;
+    height: 130px;
+}
+
+#bufferBox > div{
+    width: 80%;
+    height: 80%;
+    margin-left: 10%;
+    margin-top: 10%;
+    background-image: url("summit.png");
+}
+
+.navBox{
+    width: 100%;
+    height: 55px;
+    display: block;
+    background-color: #eeeeee;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.navBox > span {
+    vertical-align: middle;
+}
+
+.compPhotos {
+  height: 75px;
+  width: 150px;
+}
+
+#botBox{
+    width: 100%;
+    height: 300px;
+    overflow: scroll;
+    background-color: #dddddd;
+}
+

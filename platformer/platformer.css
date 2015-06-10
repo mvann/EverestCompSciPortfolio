@@ -1,0 +1,31 @@
+/*
+    Document   : platformer/platformer.css
+    Created on : 2015-06-09 04:57 PM
+    Author     : mvann
+    Description:
+    Purpose of the stylesheet follows.
+    To change this template use Tools | Templates.
+*/
+
+canvas {
+    border: 10px solid black;
+    margin-top: 1200px;
+}
+
+#displayBox {
+    width: 800px;
+    height: 60px;
+    border: 10px solid black;
+}
+
+#platformTiles {
+    display: none;
+}
+
+#background{
+    display: none;
+}
+
+#treeSheet{
+    display: none;
+}

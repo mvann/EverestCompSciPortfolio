@@ -1,0 +1,319 @@
+
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Final Portfolio</title>
+    <link href='http://fonts.googleapis.com/css?family=Droid+Sans' rel='stylesheet' type='text/css'>
+    <link type="text/css" rel="stylesheet" href="final.css" />
+</head>
+<body>
+<!--     <div id = "header"></div> -->
+    <div id="bodyDiv">
+        <div id="bodySection">
+            
+        </div>
+        <div id="bodyParagraph">
+            <h1>Vindinium<img src="player1.png" /></h1>
+            <h3>What is it?</h3>
+            <p>Vindinium is a game where each character is controlled by artificial intelligence as opposed to by a player. The
+            game is won after 1200 turns have passed, by the player with the most gold.</p>
+            <h3>The Board</h3>
+            <p>The game board is a randomly generated grid that is made up of characters, spawn points, mines, taverns, barriers 
+                and walkable space.</p>
+            <p>Characters - controlled by code written in any of the most popular programming languages. Recieves a direction
+            from the code and then moves in that direction if it can. Starts with 100 health, loses 1 health every turn to thirst,
+                dies if its health drops below 1 but cannot die from thirst. </p>
+            <p>Spawn - the place where a character spawns at the beginning of a round or after being killed. If a character
+            is standing on a spawn while the character who spawns there respawns, the character standing on the spawn is killed.</p>
+            <p>Mines - belong to a character or to no one. The mines give the character who owns them 1 gold every time
+            the character who owns them takes a turn. When a character walks in the direction of a mine while adjacent to it
+            they take the mine and lose 20 health. If a character is killed the character who killed it gets all of their mines.
+            If the character is killed by a mine they simply lose all of their mines.</p>
+            <p>Taverns - when entered they restore the health of the character by 50 but charge 2 gold.</p>
+            <p>Barriers - any place where a character can't walk.</p>
+            <p>Walkable Space - any place where a character can walk.</p>
+            <h3>My Bot</h3>
+            <p>My code is separated primarily into four sections. The first section, marked by the comment "This Code is global
+            data!", is a section that establishes data from the state of the game that can be used throughout the rest of the 
+            program. The second section is marked by the comment that starts with "The following code is an if/else statement tree..."
+            which is where the bot decides what to do based on data gained from the first section. The third section is marked
+            by the comment "This Code Determines HOW to do it". In this section are functions that are called in the decision
+            making tree in the section above which change the character's direction so that it moves towards objects like mines
+            or taverns. The fourth section is marked by the comment "Extra Functions Below" which contains functions that are
+            used in various places throughout the program.</p>
+            <div id = "botBox"><pre><code>
+                var Bot = require('bot');
+var PF = require('pathfinding');
+// var bot = new Bot('lywh3p5i', 'arena', 'http://vindinium.org'); //Put your bot's code here and change training to Arena when you want to fight others.
+var bot = new Bot('czbrxzlv', 'arena', 'http://52.8.116.125:9000'); //Put your bot's code here and change training to Arena when you want to fight others.
+var goDir;
+var Promise = require('bluebird');
+Bot.prototype.botBrain = function() {
+    return new Promise(function(resolve, reject) {
+        _this = bot;
+        //////* Write your bot below Here *//////
+        //////* Set `myDir` in the direction you want to go and then bot.goDir is set to myDir at the bottom *////////
+        
+        /*                                      * 
+         * This Code is global data!            *
+         *                                      */
+        var myBot = bot.yourBot;
+        var i;
+        var numBots = 4;
+        
+        var enemyBots = [];
+        for(i = 1; i <= numBots; i++) if(myBot.id != i) enemyBots.push(bot['bot' + i]);
+        
+        var notMyMines = bot.freeMines;
+        for(i = 1; i <= numBots; i++) if(myBot.id != i) notMyMines = notMyMines.concat(bot['bot' + i + 'mines']);
+        
+        var myMines;
+        for(i = 1; i <= numBots; i++) if(myBot.id === i) myMines = bot['bot' + i + 'mines'];
+        
+        var allMines = myMines.concat(notMyMines);
+        var enemyMineCount = notMyMines.length - bot.freeMines.length;
+        
+        enemyBots.forEach(function(e, index){
+            enemyBots[index].closestTavern = returnNearestBuilding(bot.taverns, arrForm(enemyBots[index].pos));
+            enemyBots[index].distanceToClosestTavern = distance(enemyBots[index].pos, enemyBots[index].closestTavern);
+            enemyBots[index].distanceToPlayer = distance(enemyBots[index].pos, myBot.pos);
+            enemyBots[index].inTheDangerZone = enemyBots[index].distanceToPlayer <= 4;
+        });
+        
+        var closestEnemyIndex = 0;
+        var enemyWithMostMinesIndex = 0;
+        for(i = 1; i < enemyBots.length; i++) {
+            if(enemyBots[closestEnemyIndex].distanceToPlayer > enemyBots[i].distanceToPlayer){
+                closestEnemyIndex = i;
+            }
+            if(enemyMineCount >= 1){
+                if(enemyBots[enemyWithMostMinesIndex].mineCount < enemyBots[i].mineCount){
+                    enemyWithMostMinesIndex = i;
+                }
+            }
+        }
+        
+        var nearestMine = returnNearestBuilding(notMyMines, arrForm(myBot.pos));
+        var nearestTavern = returnNearestBuilding(bot.taverns, arrForm(myBot.pos));
+        var pathToNearestTavern = createPath(arrForm(myBot.pos), nearestTavern);
+        var distanceToNearestTavern = pathToNearestTavern.length;
+        var distanceToEnemyWithMostMines = distance(myBot.pos, enemyBots[enemyWithMostMinesIndex].pos);
+        
+        var mineLeaderPathToTavern = createPath(arrForm(enemyBots[enemyWithMostMinesIndex].pos), enemyBots[enemyWithMostMinesIndex].closestTavern);
+        var pressurePoint = mineLeaderPathToTavern[mineLeaderPathToTavern.length-2];
+        var pathToNearestMine = createPath(arrForm(myBot.pos), nearestMine);
+        var personalPressurePoint = pathToNearestTavern[distanceToNearestTavern - 2];
+        
+        var enemiesInDangerZone = 0;
+        for(i = 0; i < enemyBots.length; i++){
+            if(enemyBots[i].inTheDangerZone) enemiesInDangerZone++;
+        }
+        
+        
+        
+        /* The following code is an if/else statement
+         * tree which determines which function should
+         * be used to determine which way to turn the 
+         * hero.
+         */
+
+        if(allMines.length > 8){
+            if(myBot.gold > 4){
+                if(myBot.mineCount < allMines.length / 2){
+                    if(enemyBots[enemyWithMostMinesIndex].life < myBot.life){
+                        if(distanceToEnemyWithMostMines <= 3){
+                            goTo(arrForm(enemyBots[enemyWithMostMinesIndex].pos));
+                        }
+                        else{
+                            
+                        }
+                        
+//                         if(positionInPath(arrForm(myBot.pos), mineLeaderPathToTavern) || distanceToEnemyWithMostMines <= 3){
+//                             if(distanceToEnemyWithMostMines === 4 && myBot.life < enemyBots[enemyWithMostMinesIndex].life + 21){
+//                                 stay();
+//                             }
+//                             else{
+//                                 goTo(arrForm(enemyBots[enemyWithMostMinesIndex].pos));
+//                             }
+//                         }
+//                         else{
+//                             goTo(pressurePoint);
+//                         }
+                    }
+                    else /*if(enemiesInDangerZone === 0)*/{
+                        goTo(nearestTavern);
+                    }
+                }
+                else{
+                    if(myBot.life <= 80){
+                        goTo(nearestTavern);
+                    }
+                    else{
+                        goTo(personalPressurePoint);
+                    }
+                }
+            }
+            else{
+                goTo(nearestMine);
+            }
+        }
+        else{
+            if(myBot.life <= 20){
+                goTo(nearestTavern);
+            }
+            else if(myBot.life <= 50 && distance(myPos, nearestTavern) <= 3){
+                goTo(nearestTavern);
+            }
+            else if(myBot.life <= 80 && distance(myPos, nearestTavern) <= 2){
+                goTo(nearestTavern);
+            }
+            else{
+                goTo(nearestMine);
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
+        /*                                      * 
+         * This Code Determines HOW to do it    *
+         *                                      */
+        
+        /* This function takes in a target and then points the hero
+         * towards that target
+         */
+        function attackEnemy(target){
+            bot.goDir = bot.findPath(arrForm(myBot.pos), arrForm(target));
+            console.log("Attacking toward enemy!");
+        }
+        /*This function points the hero towards the nearest mine
+         */
+        function takeNearestMine(){
+            var closestAvailableMine = returnNearestBuilding(notMyMines, arrForm(myBot.pos));
+            bot.goDir = bot.findPath(arrForm(myBot.pos), closestAvailableMine);
+            console.log("Heading toward nearest mine!");
+        }
+        /*This function points the hero towards the nearest mine
+         */
+        function goToNearestTavern(){
+            var nearestTavern = returnNearestBuilding(bot.taverns, arrForm(myBot.pos));
+            bot.goDir = bot.findPath(arrForm(myBot.pos), nearestTavern);
+            console.log("Heading to nearest tavern!");
+        }
+        /*This function takes in a position and points the hero toward it.
+         */
+        function goTo(posIn){
+            bot.goDir = bot.findPath(arrForm(myBot.pos), posIn);
+            console.log("Heading to " + posIn);
+        }
+        /*This function tells the hero to stay
+         */
+        function stay(){
+            bot.goDir = "stay";
+            console.log("Not Moving");
+        }
+        
+        //Extra Functions Below//
+        
+        /* This function takes in a position and a path and
+         * returns true or false depending on if the poisition
+         * is found within the path.
+         */
+        function positionInPath(posIn, pathIn){
+            for(var i = 0; i < pathIn.length; i++){
+                if(posIn === pathIn[i]) return true;
+            }
+            return false;
+        }
+        /* This function takes in an array of buildings and a
+         * position and returns the building that is closest
+         * to the position.
+         */
+        function returnNearestBuilding(buildingArrayIn, posIn){
+            var closest = buildingArrayIn[0];
+            for(i = 1; i < buildingArrayIn.length; i++){
+                if(distance(buildingArrayIn[i], posIn) < distance(closest, posIn) && typeof distance(buildingArrayIn[i], posIn) != "string"){
+                    closest = buildingArrayIn[i];
+                }
+            }
+            return closest;
+        }
+        /* The function takes in a position in object form and
+         * returns the position in array form.
+         */
+        function arrForm(posIn){return [posIn.x, posIn.y];}
+        /* This function returns the distance between two positions
+         * but the difference between it and bot.findDistance()
+         * is that it can take in a position in object form
+         */
+        function distance(point1, point2){
+            if(point1[0] === undefined) point1 = arrForm(point1);
+            if(point2[0] === undefined) point2 = arrForm(point2);
+            return bot.findDistance(point1, point2);
+        }
+        
+        /* This function is a modification of the findPath function located in index.js. It returns the path
+         * between two positions.
+         */
+        function createPath(pos1, pos2) {
+            if(pos1 === undefined || pos2 === undefined) return "none";
+            var _this = bot;
+            var grid = new PF.Grid(_this.gridLength, _this.gridLength, _this.useThisMap);
+            grid.setWalkableAt(pos1[0], pos1[1], true);
+            grid.setWalkableAt(pos2[0], pos2[1], true);
+            var finder = new PF.AStarFinder();
+            var path = finder.findPath(pos1[0], pos1[1], pos2[0], pos2[1], grid);
+            return path;
+        };
+               
+        
+        ///////////* DON'T REMOVE ANTYTHING BELOW THIS LINE *//////////////
+        resolve();
+    });
+}
+bot.runGame();
+                </pre></code></div>
+                <h3>Vindinium Website: <a href="vindinium.org">vindinium.org</a></h3>
+        </div>
+    </div>
+    <div id="navBar">
+        <div id="bufferBox">
+        </div>
+        <a class="navBox" href="index2.html">
+            <br>
+            Intro
+        </a>
+        <a class="navBox" href="aboutMe.html">
+            <br>
+            About Me
+        </a>
+        <a class="navBox" href="htmlPage.html">
+            <br>
+            HTML
+        </a>
+        <a class="navBox" href="computerParts.html">
+            <br>
+            Computer Parts
+        </a>
+        <a class="navBox" href="calculator.html">
+            <br>
+            Calculator
+        </a>
+        <a class="navBox" href="towerDefense.html">
+            <br>
+            Tower Defense
+        </a>
+        <a class="navBox" href="platformer.html">
+            <br>
+            Platformer
+        </a>
+        <a class="navBox" href="vindinium.html">
+            <br>
+            Vindinium
+        </a>
+    </div>
+</body>
+</html>
